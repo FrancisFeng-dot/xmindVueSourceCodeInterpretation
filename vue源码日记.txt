@@ -1,92 +1,3 @@
-observe class
-将数据打标记  __ob__
-
-1.数组
-Array数据类型没有setter，解决办法，重写array.prototype 的方法，叫做数组方法拦截器
-单写一个array.js处理拦截器的问题
-
-遍历Array.prototype，找对应的方法然后改写描述符及value函数，用到了apply()
-
-判断浏览器的支持性 const = '_proto_' in {}
-支持则 value._proto_ = arrayMethods
-不支持呢遍历arraymethods然后给value加上属性
-
-如何可侦测 for循环给子对象打__ob__标记或者new Observer 
-因为在Observer中加了 this.dep = new Dep();所以也就都有了dep()
-如果是对象中的子元素是数组，依然调用observe来处理
-
-1.数组子元素侦测   defineReactive中处理
-2.数组所有子元素侦测   observeArray遍历
-3.数组新增元素侦测  就要根据push,unshift,splice这三个方法判断了methodsToPatch.forEach里判断，然后参数调用observeArray,给元素加Observer
-
-
-2.其他的话
-for循环
-调用defineReactive 传入的是object时使用new observer(val)递归子属性，这样就把obj所有属性都转换成了getter/setter来侦测变化
-
-一个object传入Observer,这个object变为可观测object
-
-
-数据变化已经可以观测到
-下一步，通知视图更新
-那些依赖了这个数据，通知他，
-在getter中收集依赖，在setter中通知依赖更新
-dep = new Dep()
-
-如果有孩子，孩子调用dep.depend
-如果值是数组，调用循环dependArray，元素dep.depend,如果元素也是数组，继续调用循环dependArray
-
-dep.depend()  收集
-dep.notify()通知数据更新了
-
-
-依赖组不直接接收通知
-首先就是new  dep,创建了watcher,
-构造函数开始，在get()方法中，
-1.将当前watcher位置变成唯一dep.target = this;
-2.let value = this.getter.call(vm,vm)获取需要依赖的数据
-3.一旦读取，触发getter，调用dep.depend()收集依赖，会把当前watcher存入依赖组
-4.完了之后再把dep.target里增加的释放掉
-5.setter时候，比较新旧值，通知依赖组更新
-
-run方法你的this.get()就是这时候获取新的值
-this.value这时还是旧的值，需要更新
-
-第二天
-用js对象描述dom节点，以求用js的计算性能换取操作dom所消耗的性能
-js计算出哪里需要更新哪里不需要更新，尽可能少点操作DOM
-对比前后虚拟节点，DOM-Diff算法计算需要更新所在
-
-写好的template编译成vnode缓存，数据发生变化时，生成的vnode跟缓存的对比，根据差异的vnode创建真实dom节点插入视图，完成视图更新
-
-DOM-diff
-patch的过程为三
-1.创建节点
-只有三种类型节点即文本注释元素节点能够创建插入dom中
-1如果vnode.tag是真的，就是元素节点   createElement创建元素节点，对于子元素，要遍历然后创建插入到当前元素节点里，然后插入到DOM中
-node.appendChild
-2.如果vnode.isComment是真的，就是注释节点。createComment方法创建注释节点
-3.其他的就是文本节点  createTextNode方法创建文本节点，插入到dom中
-
-2.删除节点
-找到元素的父节点node.parentNode，然后删除当前节点node.removeChild(child)
-3.更新节点
-1.判断是否是节点内容相同，相同不做处理
-2.判断是否两者都为静态节点，是就不作处理
-3.判断是否新的是text节点，是的话，如果旧的跟新的不同，就把旧的更新
-4.如果新的不是text节点，对比两个相不相同，不相同就更新  在下一个方法里
-如果新的是节点而旧的不是，就把旧的内容置空，然后将新的加到旧的里
-如果旧的是节点而新的不是，就把旧的节点删除
-如果旧的是test节点，但是这时候新的肯定不是节点，所以把旧的置空
-
-
-更新节点部分
-新增子节点，一定要插入到未处理的节点之前，而不是已经处理的节点之后，这是区别所在
-所有未处理的点之前就是要移动到的目的地
-找不到就新增，找到了不一致也新增，一致的话就更新，位置不同就移动，最后旧的数组剩下了就删掉部分，新的数组剩下了就增加部分
-
-
-
 modifiers
 {
 right
@@ -98,6 +9,7 @@ native
 }
 
 Object.freeze({})冻结对象
+
 function containsSlotChild (el: ASTNode): boolean {
   if (el.type === 1) {
     if (el.tag === 'slot') {
@@ -107,8 +19,6 @@ function containsSlotChild (el: ASTNode): boolean {
   }
   return false
 }
-
-
 
 为什么把parent 和child都定义了的相同函数，合并成数组
 
@@ -120,8 +30,12 @@ vue允许用户vue.mixin方法向实例混入自定义行为，vue的一些插�
 说明所有的原生浏览器是当前父组件环境处理的，而自定义事件，会把listeners作为vnode的componentoptions传入，放到子组件初始化阶段处理，
 在子组件的初始化时候，拿到了父组件的listerners,然后执行initevents过程中，处理listeners
 
+
+
 src/compiler/helpers.js 下面的addHandler 加符号！~&
 src/core/vdom/helpers/update-listeners    normalizeEvent  去掉上面的符号，两者相反
+
+
 
 options.delimiters?: [string, string]可以用来设置包裹变量的符号如%aaa%
 
