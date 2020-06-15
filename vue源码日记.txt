@@ -20,11 +20,6 @@ function containsSlotChild (el: ASTNode): boolean {
   return false
 }
 
-为什么把parent 和child都定义了的相同函数，合并成数组
-
-vue允许用户vue.mixin方法向实例混入自定义行为，vue的一些插件都是这么做的，
-当vue.mixin和用户实例化vue时，如果设置了同一个钩子函数，在触发时同时触发两个函数，
-转换成数组是为了同一个列表保存多个钩子函数
 
 把自定义事件赋值给listeners,把浏览器原生事件data.nativeon赋值给data.on，
 说明所有的原生浏览器是当前父组件环境处理的，而自定义事件，会把listeners作为vnode的componentoptions传入，放到子组件初始化阶段处理，
